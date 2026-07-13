@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: faithful-e2e-e
+  namespace: colossus-faithful-e2e-e
+  labels:
+    app: faithful-e2e-e
+    managed-by: colossus
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: faithful-e2e-e
+  template:
+    metadata:
+      labels:
+        app: faithful-e2e-e
+    spec:
+      hostAliases:
+        - ip: "192.168.50.250"
+          hostnames:
+            - "ubuntu.desmana-truck.ts.net"
+      containers:
+        - name: app
+          image: ubuntu:30500/faithful-e2e-e:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: app-secrets
+                optional: true
