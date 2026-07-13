@@ -9,7 +9,7 @@ import helmet from 'helmet';
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
 
   const configService = app.get(ConfigService);
   app.use(helmet());
@@ -39,7 +39,8 @@ export async function bootstrap() {
 
   // End Swagger Configurations --------------------------------
 
-  await app.listen(3000);
-  Logger.log(`App running on Port 3000`);
+  const port = process.env.PORT ?? 8080;
+  await app.listen(port);
+  Logger.log(`App running on Port ${port}`);
 }
 bootstrap();

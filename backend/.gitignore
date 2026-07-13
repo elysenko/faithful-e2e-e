@@ -41,3 +41,5 @@ lerna-debug.log*
 .env
 .env.prod
 pnpm-workspace.yaml
+# TS incremental build info
+*.tsbuildinfo

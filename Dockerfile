@@ -1,27 +1,58 @@
 # syntax=docker/dockerfile:1
-FROM nginx:1.27-alpine
+#
+# Single-container image (Colossus): NestJS API + compiled Angular SPA served
+# together on port 8080. Build context = repo root.
+#
+#   /api/*  -> NestJS route handlers
+#   *       -> Angular index.html (SPA fallback via ServeStaticModule)
+#
+# APP_BASE_HREF controls the Angular <base href>. Default "/" matches the
+# app's root-relative environment (apiUrl: '/api'). If the app is served under
+# an ingress sub-path, rebuild with --build-arg APP_BASE_HREF=/<prefix>/.
 
-# Copy the README as a minimal index page so the deployment has content to serve.
-# This repo is currently empty (only README.md + .github/); the container just
-# proves ingress + service + pod wiring work end-to-end.
-RUN mkdir -p /usr/share/nginx/html
-COPY README.md /usr/share/nginx/html/README.md
+# ---------- Stage 1: build the Angular SPA ----------
+FROM node:22-alpine AS frontend
+WORKDIR /web
+ARG APP_BASE_HREF=/
+COPY web/frontend/package*.json ./
+RUN npm ci
+COPY web/frontend/ ./
+RUN npm run build -- --base-href "${APP_BASE_HREF}"
 
-RUN printf '%s\n' \
-  '<!doctype html>' \
-  '<html><head><meta charset="utf-8"><title>faithful-e2e-e</title></head>' \
-  '<body><h1>faithful-e2e-e</h1><p>Repository is empty; placeholder deploy.</p>' \
-  '<p><a href="README.md">README.md</a></p></body></html>' \
-  > /usr/share/nginx/html/index.html
+# ---------- Stage 2: build the NestJS backend ----------
+FROM node:22-alpine AS backend
+WORKDIR /app
+# Dummy URL satisfies prisma generate at build time — no real DB needed.
+ENV DATABASE_URL="postgresql://x:x@localhost/x"
+COPY backend/package*.json ./
+RUN npm ci
+COPY backend/ ./
+# Generate the Prisma client (src/generated/prisma) BEFORE building so nest
+# compiles it into dist/generated/prisma.
+RUN npx prisma generate && npm run build \
+    && test -f dist/main.js \
+    || (echo 'ERROR: dist/main.js missing after build' && exit 1)
 
-RUN printf '%s\n' \
-  'server {' \
-  '    listen 8080;' \
-  '    root /usr/share/nginx/html;' \
-  '    location / { try_files $uri $uri/ /index.html; }' \
-  '    location = /api/health { return 200 "ok\n"; add_header Content-Type text/plain; }' \
-  '}' \
-  > /etc/nginx/conf.d/default.conf
+# ---------- Stage 3: runtime ----------
+FROM node:22-alpine AS production
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Full node_modules (incl. prisma CLI) so `prisma migrate deploy` runs at boot.
+COPY --from=backend /app/node_modules ./node_modules
+COPY --from=backend /app/dist ./dist
+COPY --from=backend /app/prisma ./prisma
+COPY --from=backend /app/prisma.config.ts ./prisma.config.ts
+COPY --from=backend /app/package*.json ./
+COPY --from=backend /app/docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+# Angular build -> /app/client (ServeStaticModule rootPath = <dist>/../client).
+COPY --from=frontend /web/dist/frontend ./client
 
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+# Boot contract (Colossus A4): migrate + idempotent seed print SEED_CRED on
+# stdout every boot; the platform captures credentials from these logs, then
+# serves NestJS (which also serves the Angular SPA) on PORT 8080.
+ENTRYPOINT ["./docker-entrypoint.sh"]

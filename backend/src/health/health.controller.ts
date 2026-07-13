@@ -11,13 +11,13 @@ export class HealthController {
     private prisma: PrismaService
   ) {}
 
-  @Get('live')
+  @Get()
   @Public()
   liveness() {
     return { status: 'ok' };
   }
 
-  @Get('ready')
+  @Get('deep')
   @Public()
   @HealthCheck()
   readiness() {

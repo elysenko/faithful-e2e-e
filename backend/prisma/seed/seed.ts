@@ -19,8 +19,8 @@ function derivePassword(email: string): string {
 }
 
 const SEED_USERS = [
-  { name: 'Admin Name', email: 'admin@example.com', role: 'admin' as const },
-  { name: 'User Name',  email: 'user@example.com',  role: 'user'  as const },
+  { name: 'Admin Name', email: 'admin@faithful-e.test', role: 'admin' as const },
+  { name: 'User Name',  email: 'user@faithful-e.test',  role: 'user'  as const },
 ];
 
 async function main() {

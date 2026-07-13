@@ -3,7 +3,10 @@
  * Production seed — runs with plain `node`, no TypeScript toolchain needed.
  * Dependencies: pg + bcryptjs (both in package.json "dependencies").
  * Usage:  node prisma/seed/seed.js
- * Called by: npx prisma db seed  (via package.json "prisma.seed" field)
+ * Called by: docker-entrypoint.sh (and `npx prisma db seed` via package.json "prisma.seed")
+ *
+ * Prints one `SEED_CRED <role> <email> <password>` line per user on stdout
+ * every boot; the Colossus platform captures credentials from these logs.
  */
 const { Pool } = require('pg');
 const { createHash, randomUUID } = require('crypto');
@@ -17,8 +20,8 @@ function derivePassword(email) {
 }
 
 const SEED_USERS = [
-  { name: 'Admin Name', email: 'admin@example.com', role: 'admin' },
-  { name: 'User Name',  email: 'user@example.com',  role: 'user'  },
+  { name: 'Admin Name', email: 'admin@faithful-e.test', role: 'admin' },
+  { name: 'User Name',  email: 'user@faithful-e.test',  role: 'user'  },
 ];
 
 async function main() {
