@@ -36,12 +36,17 @@ export class NoteEditorComponent implements OnInit {
     if (id && id !== 'new') {
       this.noteId.set(id);
       this.isEdit.set(true);
-      const note = this.notesService.get(id);
-      if (note) {
-        this.form.patchValue({ title: note.title, body: note.body, done: note.done });
-      } else {
-        this.error.set('Note not found.');
-      }
+      this.loading.set(true);
+      this.notesService.get(id).subscribe({
+        next: (note) => {
+          this.form.patchValue({ title: note.title, body: note.body, done: note.done });
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(err?.error?.message ?? 'Note not found.');
+          this.loading.set(false);
+        },
+      });
     }
   }
 
@@ -51,19 +56,34 @@ export class NoteEditorComponent implements OnInit {
       return;
     }
     const value = this.form.value as { title: string; body: string; done: boolean };
-    if (this.isEdit() && this.noteId()) {
-      this.notesService.update(this.noteId()!, value);
-    } else {
-      this.notesService.create(value);
-    }
-    this.router.navigate(['/notes']);
+    this.loading.set(true);
+    this.error.set(null);
+    const request$ =
+      this.isEdit() && this.noteId()
+        ? this.notesService.update(this.noteId()!, value)
+        : this.notesService.create(value);
+    request$.subscribe({
+      next: () => this.router.navigate(['/notes']),
+      error: (err) => {
+        this.error.set(err?.error?.message ?? 'Failed to save note.');
+        this.loading.set(false);
+      },
+    });
   }
 
   remove(): void {
     if (this.isEdit() && this.noteId()) {
-      this.notesService.remove(this.noteId()!);
+      this.loading.set(true);
+      this.notesService.remove(this.noteId()!).subscribe({
+        next: () => this.router.navigate(['/notes']),
+        error: (err) => {
+          this.error.set(err?.error?.message ?? 'Failed to delete note.');
+          this.loading.set(false);
+        },
+      });
+    } else {
+      this.router.navigate(['/notes']);
     }
-    this.router.navigate(['/notes']);
   }
 
   cancel(): void {

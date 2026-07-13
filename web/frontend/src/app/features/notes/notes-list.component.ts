@@ -52,11 +52,17 @@ export class NotesListComponent implements OnInit {
 
   toggleDone(note: Note, event: Event): void {
     event.stopPropagation();
-    this.notesService.toggleDone(note.id);
+    this.notesService.toggleDone(note.id)?.subscribe({
+      error: (err) =>
+        this.notesService.error.set(err?.error?.message ?? 'Failed to update note.'),
+    });
   }
 
   deleteNote(note: Note, event: Event): void {
     event.stopPropagation();
-    this.notesService.remove(note.id);
+    this.notesService.remove(note.id).subscribe({
+      error: (err) =>
+        this.notesService.error.set(err?.error?.message ?? 'Failed to delete note.'),
+    });
   }
 }

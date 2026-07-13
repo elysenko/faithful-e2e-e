@@ -1,8 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { tap, delay } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, User, UserRole } from '../models';
 
@@ -27,20 +27,15 @@ export class AuthService {
   ) {}
 
   /**
-   * MOCKUP login. Resolves locally so the preview is navigable without a backend.
-   * service_agent replaces this body with a real POST to `${this.apiUrl}/auth/login`
-   * and maps the `{ user, token }` response (normalizing role to uppercase).
+   * Real login against the NestJS API: `POST ${apiUrl}/auth/login`.
+   * The backend responds with `{ user: { id, email, role, ... }, token }`.
+   * `persistSession` normalizes `role` to uppercase to match the frontend
+   * `UserRole` union and stores the token + user in signals/localStorage.
    */
-  login(email: string, _password: string): Observable<AuthResponse> {
-    const role: UserRole = email.toLowerCase().startsWith('admin') ? 'ADMIN' : 'USER';
-    const response: AuthResponse = {
-      user: { id: 'u-' + role.toLowerCase(), email, role: role.toLowerCase() },
-      token: 'mock-jwt-' + role.toLowerCase(),
-    };
-    return of(response).pipe(
-      delay(250),
-      tap((res) => this.persistSession(res)),
-    );
+  login(email: string, password: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/auth/login`, { email, password })
+      .pipe(tap((res) => this.persistSession(res)));
   }
 
   /** Demo Mode bypass: sign in as a seeded admin and jump straight into the app. */
