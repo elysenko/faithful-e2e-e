@@ -16,9 +16,9 @@ export class NotesService {
 
   constructor(private prisma: PrismaService) {}
 
-  create(userId: string, dto: CreateNoteDto) {
+  async create(userId: string, dto: CreateNoteDto) {
     try {
-      return this.prisma.note.create({
+      return await this.prisma.note.create({
         data: {
           title: dto.title,
           body: dto.body,
@@ -32,9 +32,9 @@ export class NotesService {
     }
   }
 
-  findAll(userId: string) {
+  async findAll(userId: string) {
     try {
-      return this.prisma.note.findMany({
+      return await this.prisma.note.findMany({
         where: { userId },
         orderBy: { updatedAt: 'desc' },
       });
