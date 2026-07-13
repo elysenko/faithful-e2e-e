@@ -1,0 +1,32 @@
+<section class="settings">
+  <div class="crumbs">
+    <a routerLink="/admin">← Back to admin</a>
+  </div>
+  <h1 class="page-title">Settings</h1>
+  <p class="page-sub">Scaffolded mock — not yet wired to the API.</p>
+
+  <div class="card">
+    <div class="field">
+      <label for="appName">Application name</label>
+      <input id="appName" type="text" [(ngModel)]="appName" name="appName" />
+    </div>
+
+    <label class="toggle-row">
+      <div class="toggle-meta">
+        <span class="toggle-title">Allow public registration</span>
+        <span class="toggle-sub">Disabled — login-only with seeded accounts.</span>
+      </div>
+      <input type="checkbox" [(ngModel)]="allowRegistration" name="allowRegistration" />
+    </label>
+
+    <label class="toggle-row">
+      <div class="toggle-meta">
+        <span class="toggle-title">Seed demo users on boot</span>
+        <span class="toggle-sub">admin&#64;faithful-e.test · user&#64;faithful-e.test</span>
+      </div>
+      <input type="checkbox" [(ngModel)]="seedOnBoot" name="seedOnBoot" />
+    </label>
+
+    <button class="btn btn-primary" type="button" disabled>Save (mock)</button>
+  </div>
+</section>

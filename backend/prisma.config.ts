@@ -14,4 +14,10 @@ export default defineConfig({
   migrations: {
     path: "prisma/migrations",
   },
+  // Consumed ONLY by the Prisma CLI (migrate/introspect). The runtime
+  // PrismaClient still connects via the @prisma/adapter-pg driver adapter
+  // using DATABASE_URL — this does not change runtime behavior.
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
 });

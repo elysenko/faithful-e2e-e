@@ -1,0 +1,75 @@
+<section class="notes">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Your notes</h1>
+      <p class="page-sub">{{ openCount() }} open · {{ doneCount() }} done</p>
+    </div>
+    <a class="btn btn-primary new-btn" routerLink="/notes/new">+ New note</a>
+  </header>
+
+  <div class="filters" role="tablist">
+    <button
+      class="chip"
+      [class.active]="filter() === 'all'"
+      (click)="setFilter('all')"
+    >All</button>
+    <button
+      class="chip"
+      [class.active]="filter() === 'open'"
+      (click)="setFilter('open')"
+    >Open</button>
+    <button
+      class="chip"
+      [class.active]="filter() === 'done'"
+      (click)="setFilter('done')"
+    >Done</button>
+  </div>
+
+  @if (loading()) {
+    <div class="state">Loading notes…</div>
+  } @else if (error()) {
+    <div class="state state-error">{{ error() }}</div>
+  } @else if (visibleNotes().length === 0) {
+    <div class="empty">
+      <div class="empty-icon">🗒️</div>
+      <h2>No notes here yet</h2>
+      <p>Capture your first task note to get started.</p>
+      <a class="btn btn-primary" routerLink="/notes/new">+ New note</a>
+    </div>
+  } @else {
+    <ul class="note-grid">
+      @for (note of visibleNotes(); track note.id) {
+        <li class="note-card" [class.is-done]="note.done">
+          <a class="note-link" [routerLink]="['/notes', note.id]">
+            <div class="note-top">
+              <h3 class="note-title">{{ note.title }}</h3>
+              @if (note.done) {
+                <span class="badge badge-done">Done</span>
+              }
+            </div>
+            <p class="note-body">{{ note.body }}</p>
+          </a>
+          <div class="note-actions">
+            <button
+              class="row-btn"
+              type="button"
+              (click)="toggleDone(note, $event)"
+            >
+              {{ note.done ? 'Mark open' : 'Mark done' }}
+            </button>
+            <a class="row-btn" [routerLink]="['/notes', note.id]">Edit</a>
+            <button
+              class="row-btn row-danger"
+              type="button"
+              (click)="deleteNote(note, $event)"
+            >
+              Delete
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+
+  <a class="fab" routerLink="/notes/new" aria-label="New note">+</a>
+</section>

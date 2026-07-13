@@ -1,0 +1,40 @@
+<section class="admin">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Admin</h1>
+      <p class="page-sub">Seeded accounts &amp; workspace overview</p>
+    </div>
+    <a class="btn btn-ghost" routerLink="/admin/settings">Settings</a>
+  </header>
+
+  <div class="stat-row">
+    <div class="stat">
+      <span class="stat-value">{{ users().length }}</span>
+      <span class="stat-label">Users</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">6</span>
+      <span class="stat-label">Total notes</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">1</span>
+      <span class="stat-label">Postgres DB</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Users</h2>
+    <ul class="user-list">
+      @for (u of users(); track u.id) {
+        <li class="user-row">
+          <span class="user-avatar">{{ u.email.charAt(0).toUpperCase() }}</span>
+          <div class="user-meta">
+            <span class="user-email">{{ u.email }}</span>
+            <span class="user-notes">{{ u.notes }} notes</span>
+          </div>
+          <span class="role-badge" [class.admin]="u.role === 'ADMIN'">{{ u.role }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>

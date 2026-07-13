@@ -1,0 +1,33 @@
+.settings { max-width: 560px; }
+.crumbs { margin-bottom: var(--space-3); }
+.crumbs a { color: var(--color-text-muted); font-size: var(--font-size-sm); font-weight: 600; }
+.crumbs a:hover { color: var(--color-primary); }
+
+.page-title { font-size: var(--font-size-xl); letter-spacing: -0.02em; }
+.page-sub { color: var(--color-text-muted); margin: var(--space-1) 0 var(--space-4); }
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+}
+.toggle-meta { display: flex; flex-direction: column; }
+.toggle-title { font-weight: 600; }
+.toggle-sub { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.toggle-row input[type='checkbox'] { width: 22px; height: 22px; }

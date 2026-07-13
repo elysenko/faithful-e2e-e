@@ -1,0 +1,60 @@
+<section class="editor">
+  <div class="crumbs">
+    <a routerLink="/notes">← Back to notes</a>
+  </div>
+
+  <h1 class="page-title">{{ isEdit() ? 'Edit note' : 'New note' }}</h1>
+
+  @if (error()) {
+    <div class="state-error">{{ error() }}</div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="form card">
+    <div class="field">
+      <label for="title">Title</label>
+      <input
+        id="title"
+        type="text"
+        formControlName="title"
+        maxlength="120"
+        placeholder="What needs doing?"
+      />
+      @if (form.get('title')?.touched && form.get('title')?.errors?.['required']) {
+        <span class="error">Title is required</span>
+      }
+      @if (form.get('title')?.errors?.['maxlength']) {
+        <span class="error">Title must be 120 characters or fewer</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="body">Details</label>
+      <textarea
+        id="body"
+        formControlName="body"
+        rows="6"
+        placeholder="Add the details for this task…"
+      ></textarea>
+      @if (form.get('body')?.touched && form.get('body')?.errors?.['required']) {
+        <span class="error">Details are required</span>
+      }
+    </div>
+
+    <label class="check-row">
+      <input type="checkbox" formControlName="done" class="check" />
+      <span>Mark as done</span>
+    </label>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" [disabled]="loading()">
+        {{ isEdit() ? 'Save changes' : 'Create note' }}
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="cancel()">Cancel</button>
+      @if (isEdit()) {
+        <button type="button" class="btn btn-danger delete-btn" (click)="remove()">
+          Delete
+        </button>
+      }
+    </div>
+  </form>
+</section>

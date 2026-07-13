@@ -1,0 +1,84 @@
+<div class="shell" data-testid="app-ready">
+  <!-- Top bar: FaithfulE branding on every page -->
+  <header class="topbar">
+    <button
+      class="icon-btn menu-btn"
+      type="button"
+      aria-label="Open menu"
+      (click)="toggleDrawer()"
+    >
+      ☰
+    </button>
+    <a class="brand" routerLink="/notes">
+      <span class="brand-mark">F</span>
+      <span class="brand-name">FaithfulE</span>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="user-chip">
+      <span class="user-avatar">{{ userEmail().charAt(0).toUpperCase() }}</span>
+      <span class="user-email">{{ userEmail() }}</span>
+    </div>
+    <button class="btn btn-ghost logout-btn" type="button" (click)="logout()">Logout</button>
+  </header>
+
+  <div class="body">
+    <!-- Desktop sidebar -->
+    <aside class="sidebar">
+      <nav class="side-nav">
+        @for (item of nav(); track item.route) {
+          <a
+            class="side-link"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+          >
+            <span class="side-icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+      <button class="btn btn-ghost side-logout" type="button" (click)="logout()">
+        Logout
+      </button>
+    </aside>
+
+    <!-- Mobile drawer -->
+    @if (drawerOpen()) {
+      <div class="drawer-scrim" (click)="closeDrawer()"></div>
+      <nav class="drawer">
+        <div class="drawer-head">
+          <span class="brand-mark">F</span>
+          <span class="brand-name">FaithfulE</span>
+        </div>
+        @for (item of nav(); track item.route) {
+          <a
+            class="drawer-link"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            (click)="closeDrawer()"
+          >
+            <span class="side-icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    }
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+
+  <!-- Mobile bottom tab bar -->
+  <nav class="tabbar">
+    @for (item of nav(); track item.route) {
+      <a
+        class="tab"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+      >
+        <span class="tab-icon">{{ item.icon }}</span>
+        <span class="tab-label">{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</div>
