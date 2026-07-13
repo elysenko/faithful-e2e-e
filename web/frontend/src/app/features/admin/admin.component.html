@@ -13,7 +13,7 @@
       <span class="stat-label">Users</span>
     </div>
     <div class="stat">
-      <span class="stat-value">6</span>
+      <span class="stat-value">{{ totalNotes() }}</span>
       <span class="stat-label">Total notes</span>
     </div>
     <div class="stat">
@@ -24,6 +24,12 @@
 
   <div class="card">
     <h2 class="card-title">Users</h2>
+    @if (loading()) {
+      <p class="page-sub" data-testid="admin-loading">Loading users…</p>
+    }
+    @if (error()) {
+      <p class="page-sub" data-testid="admin-error">{{ error() }}</p>
+    }
     <ul class="user-list">
       @for (u of users(); track u.id) {
         <li class="user-row">

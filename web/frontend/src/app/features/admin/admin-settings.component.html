@@ -3,30 +3,40 @@
     <a routerLink="/admin">← Back to admin</a>
   </div>
   <h1 class="page-title">Settings</h1>
-  <p class="page-sub">Scaffolded mock — not yet wired to the API.</p>
+  <p class="page-sub">Live system status from the FaithfulE backend.</p>
+
+  @if (error()) {
+    <p class="page-sub" data-testid="settings-error">{{ error() }}</p>
+  }
 
   <div class="card">
     <div class="field">
       <label for="appName">Application name</label>
-      <input id="appName" type="text" [(ngModel)]="appName" name="appName" />
+      <input id="appName" type="text" [value]="appName" name="appName" readonly />
     </div>
 
-    <label class="toggle-row">
+    <div class="toggle-row">
       <div class="toggle-meta">
-        <span class="toggle-title">Allow public registration</span>
-        <span class="toggle-sub">Disabled — login-only with seeded accounts.</span>
+        <span class="toggle-title">Database</span>
+        <span class="toggle-sub">Postgres readiness (/health/deep)</span>
       </div>
-      <input type="checkbox" [(ngModel)]="allowRegistration" name="allowRegistration" />
-    </label>
+      <span class="role-badge" data-testid="settings-db-status">{{ dbStatus() }}</span>
+    </div>
 
-    <label class="toggle-row">
+    <div class="toggle-row">
       <div class="toggle-meta">
-        <span class="toggle-title">Seed demo users on boot</span>
+        <span class="toggle-title">Seeded users</span>
         <span class="toggle-sub">admin&#64;faithful-e.test · user&#64;faithful-e.test</span>
       </div>
-      <input type="checkbox" [(ngModel)]="seedOnBoot" name="seedOnBoot" />
-    </label>
+      <span class="role-badge" data-testid="settings-user-count">{{ userCount() }}</span>
+    </div>
 
-    <button class="btn btn-primary" type="button" disabled>Save (mock)</button>
+    <div class="toggle-row">
+      <div class="toggle-meta">
+        <span class="toggle-title">Public registration</span>
+        <span class="toggle-sub">Disabled — login-only with seeded accounts.</span>
+      </div>
+      <span class="role-badge">off</span>
+    </div>
   </div>
 </section>

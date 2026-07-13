@@ -33,6 +33,9 @@
           >
             <span class="side-icon">{{ item.icon }}</span>
             <span>{{ item.label }}</span>
+            @if (item.route === '/notes' && openNotes() > 0) {
+              <span class="nav-badge" data-testid="open-notes-badge">{{ openNotes() }}</span>
+            }
           </a>
         }
       </nav>

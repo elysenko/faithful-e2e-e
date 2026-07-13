@@ -1,13 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-
-interface SeededUser {
-  id: string;
-  email: string;
-  role: string;
-  notes: number;
-}
+import { AdminService, AdminUser } from '../../core/services/admin.service';
 
 @Component({
   selector: 'app-admin',
@@ -16,10 +10,29 @@ interface SeededUser {
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css',
 })
-export class AdminComponent {
-  // Mockup data (admin panel is scaffolded mock, outside backend spec scope).
-  readonly users = signal<SeededUser[]>([
-    { id: 'u-admin', email: 'admin@faithful-e.test', role: 'ADMIN', notes: 4 },
-    { id: 'u-user', email: 'user@faithful-e.test', role: 'USER', notes: 2 },
-  ]);
+export class AdminComponent implements OnInit {
+  readonly users = signal<AdminUser[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+
+  readonly totalNotes = computed(() =>
+    this.users().reduce((sum, u) => sum + u.notes, 0),
+  );
+
+  constructor(private admin: AdminService) {}
+
+  ngOnInit(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.admin.listUsers().subscribe({
+      next: (users) => {
+        this.users.set(users);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.error?.message ?? 'Failed to load users.');
+        this.loading.set(false);
+      },
+    });
+  }
 }

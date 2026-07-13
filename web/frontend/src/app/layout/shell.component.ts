@@ -1,7 +1,8 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
+import { NotesService } from '../core/services/notes.service';
 
 interface NavItem {
   label: string;
@@ -17,7 +18,7 @@ interface NavItem {
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit {
   readonly drawerOpen = signal(false);
 
   private readonly allNav: NavItem[] = [
@@ -31,7 +32,22 @@ export class ShellComponent {
 
   readonly userEmail = computed(() => this.auth.currentUser()?.email ?? 'Signed in');
 
-  constructor(public auth: AuthService) {}
+  /** Live badge count of open (not-done) notes, sourced from the real API. */
+  readonly openNotes = this.notes.openCount;
+
+  constructor(
+    public auth: AuthService,
+    private notes: NotesService,
+  ) {}
+
+  ngOnInit(): void {
+    // Load the current user's notes from the real backend so the nav badge
+    // reflects live data (NotesService is a root singleton shared with the
+    // notes list/editor views).
+    if (this.auth.isLoggedIn()) {
+      this.notes.list();
+    }
+  }
 
   toggleDrawer(): void {
     this.drawerOpen.update((v) => !v);

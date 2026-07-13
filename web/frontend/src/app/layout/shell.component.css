@@ -174,3 +174,15 @@
   .tab.active { color: var(--color-primary); }
   .tab-icon { font-size: 20px; }
 }
+
+.nav-badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
