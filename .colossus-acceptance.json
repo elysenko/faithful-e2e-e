@@ -1,5 +1,5 @@
 {
   "ready_testid": "app-ready",
-  "expect_text": [],
+  "expect_text": ["faithfule", "welcome back", "sign in to your task notes"],
   "reject_signatures": ["home-title\">Users<", "Loading...", "Failed to load users."]
 }
