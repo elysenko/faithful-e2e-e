@@ -6,14 +6,18 @@
 #   /api/*  -> NestJS route handlers
 #   *       -> Angular index.html (SPA fallback via ServeStaticModule)
 #
-# APP_BASE_HREF controls the Angular <base href>. Default "/" matches the
-# app's root-relative environment (apiUrl: '/api'). If the app is served under
-# an ingress sub-path, rebuild with --build-arg APP_BASE_HREF=/<prefix>/.
+# APP_BASE_HREF controls the Angular <base href>. The Colossus ingress mounts
+# this app under the sub-path /faithful-e2e-e/ and rewrites it away before the
+# request reaches the pod (see k8s/ingress.yaml: rewrite-target /$2). The base
+# href therefore MUST match that sub-path so the browser requests assets at
+# /faithful-e2e-e/main.js (routable by the ingress) instead of /main.js (404 at
+# the domain root). apiUrl is relative ('api') so it resolves under the same
+# base href. Override with --build-arg APP_BASE_HREF=/<prefix>/ if remounted.
 
 # ---------- Stage 1: build the Angular SPA ----------
 FROM node:22-alpine AS frontend
 WORKDIR /web
-ARG APP_BASE_HREF=/
+ARG APP_BASE_HREF=/faithful-e2e-e/
 COPY web/frontend/package*.json ./
 RUN npm ci
 COPY web/frontend/ ./
