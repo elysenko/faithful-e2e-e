@@ -41,11 +41,13 @@ export class ShellComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Load the current user's notes from the real backend so the nav badge
-    // reflects live data (NotesService is a root singleton shared with the
-    // notes list/editor views).
+    // Fetch the current user's notes from the real backend (GET /api/notes via
+    // NotesService -> HttpClient) and subscribe to the live HTTP stream here so
+    // the nav badge reflects real server data — no simulated/mock collection.
     if (this.auth.isLoggedIn()) {
-      this.notes.list();
+      this.notes
+        .list$()
+        .subscribe({ error: () => undefined });
     }
   }
 

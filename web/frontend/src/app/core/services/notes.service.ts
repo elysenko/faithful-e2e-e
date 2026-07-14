@@ -27,20 +27,31 @@ export class NotesService {
 
   constructor(private http: HttpClient) {}
 
-  /** Load all notes for the current user. GET `${apiUrl}`. */
-  list(): void {
+  /**
+   * Load all notes for the current user from the backend. GET `${apiUrl}`.
+   * Returns the live HTTP stream so callers can subscribe/react directly; the
+   * `_notes`/`loading`/`error` signals are updated as a side effect via `tap`.
+   */
+  list$(): Observable<Note[]> {
     this.loading.set(true);
     this.error.set(null);
-    this.http.get<Note[]>(this.apiUrl).subscribe({
-      next: (notes) => {
-        this._notes.set(notes ?? []);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(this.messageFor(err, 'Failed to load notes.'));
-        this.loading.set(false);
-      },
-    });
+    return this.http.get<Note[]>(this.apiUrl).pipe(
+      tap({
+        next: (notes) => {
+          this._notes.set(notes ?? []);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(this.messageFor(err, 'Failed to load notes.'));
+          this.loading.set(false);
+        },
+      }),
+    );
+  }
+
+  /** Fire-and-forget load for views that only read the cached `notes` signal. */
+  list(): void {
+    this.list$().subscribe({ error: () => undefined });
   }
 
   /** Fetch a single note by id. GET `${apiUrl}/:id`. */
