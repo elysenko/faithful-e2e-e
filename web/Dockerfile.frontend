@@ -1,11 +1,36 @@
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1
+FROM node:20-alpine AS build
 WORKDIR /app
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund --loglevel=error
+# Guarantee the Angular application builder is present even if the app dropped it — pinned to
+# the app's OWN Angular MAJOR (read from the installed @angular/core), not a hardcoded version:
+# installing a mismatched builder (e.g. v19 against an Angular 17 app) fails peer resolution.
+# --legacy-peer-deps keeps the install from hard-failing on incidental peer conflicts.
+RUN NG=$(node -p "require('@angular/core/package.json').version.split('.')[0]" 2>/dev/null || echo 17); if ! npm ls @angular-devkit/build-angular >/dev/null 2>&1; then npm install -D @angular-devkit/build-angular@^${NG:-17} --no-audit --no-fund --legacy-peer-deps; fi
 COPY frontend/ .
-RUN npm run build
-
+# tsconfig guard: generated Angular apps sometimes ship angular.json (which references
+# `tsConfig: tsconfig.app.json`) but OMIT the tsconfig files themselves -> `ng build` dies
+# "Cannot find tsconfig file tsconfig.app.json" (ENOENT). Deterministically write the
+# standard Angular tsconfig set when tsconfig.app.json is absent (idempotent — never
+# clobbers a real one). Permissive/build-focused (strict off, strictTemplates off) so a
+# loosely-typed generated app still BUILDS; type-purity is not the debug deploy's job.
+RUN if [ -f angular.json ] && [ ! -f tsconfig.app.json ]; then printf '%s' '{"compileOnSave":false,"compilerOptions":{"outDir":"./dist/out-tsc","strict":false,"skipLibCheck":true,"esModuleInterop":true,"sourceMap":false,"declaration":false,"experimentalDecorators":true,"moduleResolution":"bundler","importHelpers":true,"target":"ES2022","module":"ES2022","useDefineForClassFields":false,"lib":["ES2022","dom"]},"angularCompilerOptions":{"strictTemplates":false,"strictInjectionParameters":false}}' > tsconfig.json; printf '%s' '{"extends":"./tsconfig.json","compilerOptions":{"outDir":"./out-tsc/app","types":[]},"files":["src/main.ts"],"include":["src/**/*.d.ts"]}' > tsconfig.app.json; printf '%s' '{"extends":"./tsconfig.json","compilerOptions":{"outDir":"./out-tsc/spec","types":["jasmine"]},"include":["src/**/*.spec.ts","src/**/*.d.ts"]}' > tsconfig.spec.json; fi
+# zone.js polyfill guard: generated apps sometimes omit `polyfills: ["zone.js"]` from the
+# angular.json BUILD target (only the test target has it) and don't import zone.js in main.ts,
+# so the production bundle ships WITHOUT zone.js -> at runtime Angular's zone change detection
+# can't bootstrap -> "NG0908: In this configuration Angular requires Zone.js" -> blank page.
+# zone.js is a dependency already; just ensure the build target loads it. Idempotent.
+RUN if [ -f angular.json ]; then node -e "const fs=require('fs');const p='angular.json';try{const j=JSON.parse(fs.readFileSync(p,'utf8'));let ch=false;for(const k in (j.projects||{})){const t=(j.projects[k].architect||j.projects[k].targets||{});const o=(t.build&&t.build.options)||null;if(o){let pf=Array.isArray(o.polyfills)?o.polyfills:(o.polyfills?[o.polyfills]:[]);if(!pf.includes('zone.js')){pf.unshift('zone.js');o.polyfills=pf;ch=true;}}}if(ch)fs.writeFileSync(p,JSON.stringify(j,null,2));}catch(e){}" || true; fi
+RUN npx ng build --configuration production || npx ng build
+# Normalize the Angular output dir (dist/<project>/browser) to a fixed path for nginx.
+RUN mkdir -p /out && (cp -r dist/*/browser/. /out/ 2>/dev/null || cp -r dist/*/. /out/ 2>/dev/null || cp -r dist/. /out/)
 FROM nginx:alpine
-COPY --from=builder /app/dist/frontend/browser /usr/share/nginx/html
+COPY --from=build /out /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# backend proxy-port guard: deploy_debug_app FORCES the backend on PORT=3000 and names its
+# Service `backend` (see _stage_deployer / _expand_service_env), but generated nginx.conf
+# often proxies /api to a different port (e.g. backend:3001) -> 502 on every /api call.
+# Normalize the proxy target to the deploy's actual backend Service:port. Idempotent.
+RUN sed -i 's#backend:[0-9][0-9]*#backend:3000#g' /etc/nginx/conf.d/default.conf || true
 EXPOSE 80

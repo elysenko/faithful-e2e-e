@@ -12,7 +12,12 @@ export async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const configService = app.get(ConfigService);
-  app.use(helmet());
+  // Disable helmet's default Content-Security-Policy: the SPA is served from
+  // this same origin and the platform injects external telemetry scripts
+  // (Colossus loader, Cloudflare insights) plus inline bootstrap scripts that a
+  // strict `script-src 'self'` policy would block. All other helmet protections
+  // (X-Frame-Options, HSTS, etc.) remain enabled.
+  app.use(helmet({ contentSecurityPolicy: false }));
   app.enableCors({
     origin: configService.get<string>('FRONTEND_URL', 'http://localhost:4200'),
     credentials: true,
